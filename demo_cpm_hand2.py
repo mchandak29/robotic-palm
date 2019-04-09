@@ -88,8 +88,8 @@ limbs = [[0, 1],
          [19, 20]
          ]
 
-m_avg=np.zeros((10,4))
-ratios=np.zeros((4))
+m_avg=np.zeros((2,6))
+ratios=np.zeros((6))
 avg_i=0
 def main(argv):
     global ratios, avg_i, m_avg, s
@@ -106,7 +106,7 @@ def main(argv):
 
     """Create session and restore weights
     """
-    sess = tf.Session()
+    sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=False))
     sess.run(tf.global_variables_initializer())
     model.load_weights_from_file(FLAGS.model_path, sess, False)
 
@@ -210,27 +210,24 @@ def main(argv):
                 else:
                     debug(coords)
                     print('degrees: '+str(np.mean(m_avg,axis=0)))
-                avg_i=(avg_i+1)%10
+                avg_i=(avg_i+1)%2
                 mavg_deg=np.mean(m_avg,axis=0)
+                
+
+                
                 transp_str=''
                 for i in mavg_deg:
                     transp_str=transp_str+str(i)+','
+                
                 s.flushInput()
                 s.flushOutput()
                 s.write(transp_str.encode())    
-
-                    
-                '''
-                filedem = open("testfile.txt","a")
-                for i in [0,5,7,9,11,13,15,17,19]:
-                    for j in [0,1]:
-                        filedem.write(str(coords[i][j])+' ')
-                        filedem.close()
-                '''
                 
+
+
                 if cv2.waitKey(1) == ord('q'): break
                 #print('fps: %.2f' % (1 / (time.time() - t1)))
-            
+                #print(mavg_deg[4], ((coords[4][0]-coords[17][0])**2+(coords[4][1]-coords[17][1])**2)**0.5)
             
         
 
@@ -295,7 +292,7 @@ def debug(coords):
     global ratios
     degs=[]
     coords1 = []
-    for i in [1,5,8,9,12,13,16,17,20]:
+    for i in [1,5,8,9,12,13,16,17,20,0]:
         coords1.append(coords[i])
 
     Xc1=(coords1[0][0]+coords1[1][0]+coords1[3][0]+coords1[5][0]+coords1[7][0])/5
@@ -312,14 +309,37 @@ def debug(coords):
             r=-1
         degs.append(math.degrees(math.acos((r))))
     #print(degs)
-    for i in range(4):
+    ax=((coords1[0][0]-coords1[9][0])**2+(coords1[0][1]-coords1[9][1])**2)**0.5
+    bx=((coords1[1][0]-coords1[9][0])**2+(coords1[1][1]-coords1[9][1])**2)**0.5
+    cx=((coords1[0][0]-coords1[1][0])**2+(coords1[0][1]-coords1[1][1])**2)**0.5
+    h=(4*(ax**2)*(bx**2)-(ax**2+bx**2-cx**2)**2)/(4*(bx**2))
+    h=max(h,0)**0.5
+    h=h/float(ratios[4])
+    if(h>1):
+        h=1
+    if(h<-1):
+        h=-1
+    #thumb angle to be corrected
+    degs.append(math.degrees(math.acos((h))))
+    ax=((coords[0][0]-coords[4][0])**2+(coords[0][1]-coords[4][1])**2)**0.5
+    bx=((coords[0][0]-coords[17][0])**2+(coords[0][1]-coords[17][1])**2)**0.5
+    cx=((coords[4][0]-coords[17][0])**2+(coords[4][1]-coords[17][1])**2)**0.5
+    h=(ax**2+bx**2-cx**2)/(2*ax*bx)
+    h=math.degrees(math.acos((max(h,0)**0.5)))
+    h=h/float(ratios[5])
+    if(h>1):
+        h=1
+    if(h<-1):
+        h=-1
+    degs.append(math.degrees(math.acos((h))))    
+    for i in range(6):
         m_avg[avg_i][i]=degs[i]
 
 def store_deb(coords, t0):
     global ratios
     if((time.time()-t0)>15):
         coords1=[]
-        for i in [1,5,8,9,12,13,16,17,20]:
+        for i in [1,5,8,9,12,13,16,17,20,0]:
             coords1.append(coords[i])
         Xc1=(coords1[0][0]+coords1[1][0]+coords1[3][0]+coords1[5][0]+coords1[7][0])/5
         Yc1=(coords1[0][1]+coords1[1][1]+coords1[3][1]+coords1[5][1]+coords1[7][1])/5
@@ -329,8 +349,20 @@ def store_deb(coords, t0):
             r=length2/length1
             #print(r, v[i])
             ratios[i] = 0.8*ratios[i]+r*0.2
-            
+        
+        ax=((coords1[0][0]-coords1[9][0])**2+(coords1[0][1]-coords1[9][1])**2)**0.5
+        bx=((coords1[1][0]-coords1[9][0])**2+(coords1[1][1]-coords1[9][1])**2)**0.5
+        cx=((coords1[0][0]-coords1[1][0])**2+(coords1[0][1]-coords1[1][1])**2)**0.5
+        h=(4*(ax**2)*(bx**2)-(ax**2+bx**2-cx**2)**2)/(4*(bx**2))
+        h=max(h,0)**0.5
+        ratios[4]=ratios[4]*0.8+h*0.2
 
-
+        ax=((coords[0][0]-coords[4][0])**2+(coords[0][1]-coords[4][1])**2)**0.5
+        bx=((coords[0][0]-coords[17][0])**2+(coords[0][1]-coords[17][1])**2)**0.5
+        cx=((coords[4][0]-coords[17][0])**2+(coords[4][1]-coords[17][1])**2)**0.5
+        h=(ax**2+bx**2-cx**2)/(2*ax*bx)
+        h=math.degrees(math.acos((max(h,0)**0.5)))
+        ratios[5]=ratios[5]*0.8+h*0.2
+        
 if __name__ == '__main__':
     tf.app.run()
