@@ -1,5 +1,5 @@
 # Robotic-Palm
-The project goal was to design a working model of a human palm and to replicate the palm motion and controls using a video feed of a human palm using cameras.
+The project goal was to design a working model of a human palm which replicates its motion and controls using a video feed from camera.
 
 **Poster** - [link](https://github.com/mchandak29/robotic-palm/blob/master/Design%20Project%20poster.pdf)
 
