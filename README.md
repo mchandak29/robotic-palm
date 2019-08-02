@@ -22,3 +22,8 @@ Tracking support for single hand.
  - Windows 10 / Ubuntu 16.04
  - Tensorflow 1.4.0
  - OpenCV 3.2
+
+## Results Compilation
+<p align="center">
+    <img src="https://github.com/mchandak29/robotic-palm/blob/master/Screenshot%20from%202019-08-02%2015-40-24.png", width="480">
+</p>
